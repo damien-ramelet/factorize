@@ -9,6 +9,7 @@ import base64
 import typing
 
 import requests
+from bs4 import BeautifulSoup
 from pydantic import BaseModel, ValidationError, field_validator, Field
 
 
@@ -128,6 +129,40 @@ def cmd_factorize() -> None:
     if not found:
         print("ℹ No common factors found among stored moduli.")
 
+def cmd_factor_db():
+    store = load_store()
+    for url, keys in store.items():
+        for k in keys:
+            n_int = decode_modulus(k["n"])
+            resp = requests.get(f"https://factordb.com/index.php?query={n_int}")
+            resp.raise_for_status()
+            soup = BeautifulSoup(resp.text, "html.parser")
+            # Locate the first <table> after "Result:"
+            table = soup.find("b", string="Result:").find_parent("table")
+            rows = table.find_all("tr")
+            # Extract status from first data row
+            status_cell = rows[2].find_all("td")[0]
+            status = status_cell.get_text(strip=True)
+            # Extract the right side of the equality row
+            number_cell = rows[2].find_all("td")[2]
+            parts = number_cell.get_text(separator=" ", strip=True).split("=")
+            lhs = parts[0].strip()
+            rhs = parts[1].strip()
+            if "*" in status:
+                print(f"➕ New number added to factordb ! (from {url} | kid={k['kid']}\n")
+                status = status.split("*")[0]
+            if status in ("FF", "CF"):
+                # factors known
+                factors = rhs.split("·")
+                print(f"✅ {url} | kid={k['kid']}")
+                print(f"  n = {lhs}")
+                print(f"  factors = {factors}\n")
+            else:
+                # composite unknown
+                print(f"❓ {url} | kid={k['kid']}")
+                print(f"  n = {lhs}")
+                print("  factors not known\n")
+
 
 def main():
     parser = argparse.ArgumentParser(description="Manage JWKS sets in keys.json")
@@ -135,6 +170,7 @@ def main():
     group.add_argument("-a", "--add", metavar="URL", help="Fetch & add JWKs from URL")
     group.add_argument("-r", "--refresh", action="store_true", help="Refresh all stored JWKS")
     group.add_argument("-f", "--factorize", action="store_true", help="Factorize RSA moduli via GCD")
+    group.add_argument("-d", "--factor-db", action="store_true", help="Query FactorDB for each modulus")
     args = parser.parse_args()
 
     try:
@@ -144,6 +180,8 @@ def main():
             cmd_refresh()
         elif args.factorize:
             cmd_factorize()
+        elif args.factor_db:
+            cmd_factor_db()
     except ValidationError as ve:
         sys.exit(f"✖ Validation error: {ve}")
     except requests.HTTPError as he:
