@@ -40,7 +40,11 @@ def fetch_and_validate_jwks(url: str) -> List[Dict[str, Any]]:
         raise ValueError("Response must be a dict with a 'keys' list")
     validated = []
     for jwk_dict in data["keys"]:
-        key = JWK(**jwk_dict)
+        try:
+            key = JWK(**jwk_dict)
+        except ValidationError as e:
+            print(f"✖ Validation error: {e}, skipping...\n")
+            continue
         validated.append(key.model_dump())
     return validated
 
