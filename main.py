@@ -25,7 +25,6 @@ class JWK(BaseModel):
     x5t: str = ""
     x5t_S256: str = Field(alias="x5t#S256", default="")
 
-
     @field_validator("kty")
     def must_be_rsa(cls, v):
         if v.lower() != "rsa":
@@ -37,7 +36,11 @@ def fetch_and_validate_jwks(url: str) -> List[Dict[str, Any]]:
     resp = requests.get(url)
     resp.raise_for_status()
     data = resp.json()
-    if not isinstance(data, dict) or "keys" not in data or not isinstance(data["keys"], list):
+    if (
+        not isinstance(data, dict)
+        or "keys" not in data
+        or not isinstance(data["keys"], list)
+    ):
         raise ValueError("Response must be a dict with a 'keys' list")
     validated = []
     for jwk_dict in data["keys"]:
@@ -107,7 +110,7 @@ def cmd_refresh() -> None:
 
 
 def decode_modulus(n_b64: str) -> int:
-    padding = '=' * (-len(n_b64) % 4)
+    padding = "=" * (-len(n_b64) % 4)
     b = base64.urlsafe_b64decode(n_b64 + padding)
     return bytes_to_long(b)
 
@@ -134,6 +137,7 @@ def cmd_factorize() -> None:
     if not found:
         print("ℹ No common factors found among stored moduli.")
 
+
 def cmd_factor_db():
     store = load_store()
     for url, keys in store.items():
@@ -154,7 +158,9 @@ def cmd_factor_db():
             lhs = parts[0].strip()
             rhs = parts[1].strip()
             if "*" in status:
-                print(f"➕ New number added to factordb ! (from {url} | kid={k['kid']}\n")
+                print(
+                    f"➕ New number added to factordb ! (from {url} | kid={k['kid']}\n"
+                )
                 status = status.split("*")[0]
             if status in ("FF", "CF"):
                 # factors known
@@ -173,9 +179,15 @@ def main():
     parser = argparse.ArgumentParser(description="Manage JWKS sets in keys.json")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("-a", "--add", metavar="URL", help="Fetch & add JWKs from URL")
-    group.add_argument("-r", "--refresh", action="store_true", help="Refresh all stored JWKS")
-    group.add_argument("-f", "--factorize", action="store_true", help="Factorize RSA moduli via GCD")
-    group.add_argument("-d", "--factor-db", action="store_true", help="Query FactorDB for each modulus")
+    group.add_argument(
+        "-r", "--refresh", action="store_true", help="Refresh all stored JWKS"
+    )
+    group.add_argument(
+        "-f", "--factorize", action="store_true", help="Factorize RSA moduli via GCD"
+    )
+    group.add_argument(
+        "-d", "--factor-db", action="store_true", help="Query FactorDB for each modulus"
+    )
     args = parser.parse_args()
 
     try:

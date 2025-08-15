@@ -10,5 +10,6 @@ dependencies = [
     "pycryptodome>=3.23.0",
     "pydantic>=2.11.7",
     "requests>=2.32.4",
+    "ruff>=0.12.9",
     "types-requests>=2.32.4.20250809",
 ]
