@@ -1,4 +1,5 @@
 import argparse
+from Crypto.Util.number import bytes_to_long
 import json
 import sys
 from pathlib import Path
@@ -108,7 +109,7 @@ def cmd_refresh() -> None:
 def decode_modulus(n_b64: str) -> int:
     padding = '=' * (-len(n_b64) % 4)
     b = base64.urlsafe_b64decode(n_b64 + padding)
-    return int.from_bytes(b, byteorder='big')
+    return bytes_to_long(b)
 
 
 def cmd_factorize() -> None:
