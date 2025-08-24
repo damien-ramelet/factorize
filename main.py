@@ -1,4 +1,5 @@
 import argparse
+import time
 from Crypto.Util.number import bytes_to_long
 import json
 import sys
@@ -143,6 +144,7 @@ def cmd_factor_db():
     for url, keys in store.items():
         for k in keys:
             n_int = decode_modulus(k["n"])
+            time.sleep(2)
             resp = requests.get(f"https://factordb.com/index.php?query={n_int}")
             resp.raise_for_status()
             soup = BeautifulSoup(resp.text, "html.parser")
