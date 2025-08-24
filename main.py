@@ -64,7 +64,7 @@ def load_store() -> Dict[str, List[Dict[str, Any]]]:
         content = json.loads(KEYS_FILE.read_text())
         if not isinstance(content, dict):
             raise ValueError
-        return content  # type: ignore
+        return content
     except Exception:
         sys.exit("✖ keys.json is invalid or not a dict.")
 
