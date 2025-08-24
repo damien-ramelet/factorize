@@ -17,7 +17,7 @@ from pydantic import BaseModel, ValidationError, field_validator, Field
 
 class JWK(BaseModel):
     kty: str
-    kid: str
+    kid: str = ""
     alg: str = ""
     use: str = ""
     n: str
